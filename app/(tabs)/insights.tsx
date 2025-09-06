@@ -1,13 +1,17 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import PieChart from '@/components/PieChart';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { getWeeklySpending, mockTransactions } from '@/services/mockData';
+import { useState } from 'react';
+import { Dimensions, NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
 export default function InsightsScreen() {
+  const [chartPage, setChartPage] = useState(0);
+  const [innerChartWidth, setInnerChartWidth] = useState<number>(0);
   const spendingData = [
     { category: 'Food & Dining', amount: 145.50, percentage: 35, color: '#FF6B6B' },
     { category: 'Transportation', amount: 134.50, percentage: 32, color: '#4ECDC4' },
@@ -15,6 +19,17 @@ export default function InsightsScreen() {
     { category: 'Entertainment', amount: 15.99, percentage: 4, color: '#96CEB4' },
     { category: 'Healthcare', amount: 75.00, percentage: 18, color: '#DDA0DD' },
   ];
+
+  const totalAmount = spendingData.reduce((sum, d) => sum + d.amount, 0);
+
+  // Compute spending metrics from real transactions
+  const weeklyTxns = getWeeklySpending(mockTransactions);
+  const weeklyAverage = weeklyTxns.reduce((sum, t) => sum + (t.type === 'expense' ? t.amount : 0), 0);
+  const monthlyProjection = weeklyAverage * 4.3; // approx weeks per month
+  // Responsive pie sizing based on screen width
+  const pageWidth = innerChartWidth || Math.max(width - 80, 240);
+  const dynamicPieSize = Math.min(Math.max(pageWidth * 0.75, 160), 300);
+  const dynamicPieThickness = Math.max(18, Math.round(dynamicPieSize * 0.12));
 
   const insights = [
     {
@@ -71,6 +86,7 @@ export default function InsightsScreen() {
           </ThemedText>
         </ThemedView>
 
+
         <ThemedView style={styles.summaryCard}>
           <ThemedText type="subtitle" style={styles.cardTitle}>This Week's Spending</ThemedText>
           <View style={styles.summaryRow}>
@@ -87,30 +103,81 @@ export default function InsightsScreen() {
 
         <ThemedView style={styles.chartCard}>
           <ThemedText type="subtitle" style={styles.cardTitle}>Spending by Category</ThemedText>
-          <View style={styles.chartContainer}>
-            {spendingData.map((item, index) => (
-              <View key={index} style={styles.chartItem}>
-                <View style={styles.chartRow}>
-                  <View style={styles.categoryInfo}>
-                    <View style={[styles.categoryDot, { backgroundColor: item.color }]} />
-                    <ThemedText style={styles.categoryName}>{item.category}</ThemedText>
+          <View onLayout={(e: LayoutChangeEvent) => setInnerChartWidth(e.nativeEvent.layout.width)}>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            nestedScrollEnabled
+            snapToAlignment="start"
+            decelerationRate="fast"
+            snapToInterval={pageWidth}
+            onScroll={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
+              const x = e.nativeEvent.contentOffset.x;
+              const page = Math.round(x / pageWidth);
+              if (page !== chartPage) setChartPage(page);
+            }}
+            onMomentumScrollEnd={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
+              const x = e.nativeEvent.contentOffset.x;
+              const page = Math.round(x / pageWidth);
+              if (page !== chartPage) setChartPage(page);
+            }}
+            scrollEventThrottle={16}
+          >
+            <View style={{ width: pageWidth }}>
+              <View style={styles.chartContainer}>
+                {spendingData.map((item, index) => (
+                  <View key={index} style={styles.chartItem}>
+                    <View style={styles.chartRow}>
+                      <View style={styles.categoryInfo}>
+                        <View style={[styles.categoryDot, { backgroundColor: item.color }]} />
+                        <ThemedText style={styles.categoryName}>{item.category}</ThemedText>
+                      </View>
+                      <ThemedText style={styles.categoryAmount}>${item.amount.toFixed(2)}</ThemedText>
+                    </View>
+                    <View style={styles.progressBar}>
+                      <View 
+                        style={[
+                          styles.progressFill, 
+                          { 
+                            width: `${item.percentage}%`, 
+                            backgroundColor: item.color 
+                          }
+                        ]} 
+                      />
+                    </View>
+                    <ThemedText style={styles.percentageText}>{item.percentage}%</ThemedText>
                   </View>
-                  <ThemedText style={styles.categoryAmount}>${item.amount.toFixed(2)}</ThemedText>
-                </View>
-                <View style={styles.progressBar}>
-                  <View 
-                    style={[
-                      styles.progressFill, 
-                      { 
-                        width: `${item.percentage}%`, 
-                        backgroundColor: item.color 
-                      }
-                    ]} 
-                  />
-                </View>
-                <ThemedText style={styles.percentageText}>{item.percentage}%</ThemedText>
+                ))}
               </View>
-            ))}
+            </View>
+            <View style={{ width: pageWidth }}>
+              <View style={styles.pieWrapper}>
+                <PieChart
+                  size={dynamicPieSize}
+                  thickness={dynamicPieThickness}
+                  data={spendingData.map((d) => ({ value: d.amount, color: d.color }))}
+                />
+                <View style={styles.pieCenterLabel}>
+                  <ThemedText style={styles.pieCenterTitle}>Total</ThemedText>
+                  <ThemedText type="title">${totalAmount.toFixed(2)}</ThemedText>
+                </View>
+              </View>
+              <View style={styles.legendGrid}>
+                {spendingData.map((d, idx) => (
+                  <View key={idx} style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: d.color }]} />
+                    <ThemedText style={styles.legendName}>{d.category}</ThemedText>
+                    <ThemedText style={styles.legendValue}>${d.amount.toFixed(2)}</ThemedText>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </ScrollView>
+          </View>
+          <View style={styles.pagerDots}>
+            <View style={[styles.dot, chartPage === 0 && styles.dotActive]} />
+            <View style={[styles.dot, chartPage === 1 && styles.dotActive]} />
           </View>
         </ThemedView>
 
@@ -147,7 +214,7 @@ export default function InsightsScreen() {
           <View style={styles.trendItem}>
             <View style={styles.trendInfo}>
               <ThemedText style={styles.trendLabel}>Weekly Average</ThemedText>
-              <ThemedText style={styles.trendValue}>$485.50</ThemedText>
+              <ThemedText style={styles.trendValue}>${weeklyAverage.toFixed(2)}</ThemedText>
             </View>
             <View style={styles.trendChange}>
               <IconSymbol name="arrow.up.right" size={16} color="#FF6B6B" />
@@ -157,7 +224,7 @@ export default function InsightsScreen() {
           <View style={styles.trendItem}>
             <View style={styles.trendInfo}>
               <ThemedText style={styles.trendLabel}>Monthly Projection</ThemedText>
-              <ThemedText style={styles.trendValue}>$2,287.96</ThemedText>
+              <ThemedText style={styles.trendValue}>${monthlyProjection.toFixed(2)}</ThemedText>
             </View>
             <View style={styles.trendChange}>
               <IconSymbol name="arrow.down.right" size={16} color="#96CEB4" />
@@ -231,6 +298,62 @@ const styles = StyleSheet.create({
   },
   chartContainer: {
     gap: 16,
+  },
+  pagerDots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 12,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#e0e0e0',
+  },
+  dotActive: {
+    backgroundColor: '#4ECDC4',
+  },
+  pieWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 8,
+    position: 'relative',
+  },
+  pieCenterLabel: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pieCenterTitle: {
+    fontSize: 12,
+    opacity: 0.7,
+  },
+  legendGrid: {
+    marginTop: 12,
+    gap: 8,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 8,
+  },
+  legendName: {
+    flex: 1,
+    marginLeft: 8,
+  },
+  legendValue: {
+    fontWeight: '600',
   },
   chartItem: {
     marginBottom: 8,

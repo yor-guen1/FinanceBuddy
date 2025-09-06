@@ -1,18 +1,50 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { mockTransactions, mockCategories, mockInsights, getSpendingByCategory } from '@/services/mockData';
+import { getSpendingByCategory, getWeeklySpending, mockCategories, mockInsights, mockTransactions } from '@/services/mockData';
+import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
 export default function DashboardScreen() {
-  const spendingData = getSpendingByCategory(mockTransactions, mockCategories);
+  // Calculate current month spending
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthlyTransactions = mockTransactions.filter((t) => new Date(t.date) >= monthStart);
+
+  const spendingData = getSpendingByCategory(monthlyTransactions, mockCategories);
   const totalSpent = spendingData.reduce((sum, category) => sum + category.spent, 0);
   const totalBudget = 2000;
   const remainingBudget = totalBudget - totalSpent;
+
+  // Trend: compare ideal-to-date vs. current spending
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const elapsedDays = now.getDate();
+  const idealSpentToDate = (elapsedDays / daysInMonth) * totalBudget;
+  // Percentage-based trend (actual utilization vs. ideal utilization)
+  const idealUtilizationPercent = (elapsedDays / daysInMonth) * 100;
+  const actualUtilizationPercent = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+  const deviationPercent = actualUtilizationPercent - idealUtilizationPercent; // positive = overspending
+  const tightThreshold = 5; // percentage points for "on track"
+  const isOnTrack = Math.abs(deviationPercent) <= tightThreshold;
+  const isOver = deviationPercent > tightThreshold;
+  const isUnder = deviationPercent < -tightThreshold;
+  const trendColor = isOnTrack ? '#2ecc71' : isOver ? '#e74c3c' : '#2E86C1';
+  const trendIcon = isOnTrack ? 'checkmark.circle.fill' : isOver ? 'arrow.up.right' : 'arrow.down.right';
+  const trendLabel = isOnTrack ? 'On track' : isOver ? 'Overspending' : 'Under plan';
+
+  // Weekly average and monthly projection
+  const weeklyExpenses = getWeeklySpending(monthlyTransactions);
+  const weeklyAverage = weeklyExpenses.reduce((sum, t) => sum + (t.type === 'expense' ? t.amount : 0), 0);
+  const monthlyProjection = (actualUtilizationPercent / Math.max(idealUtilizationPercent, 0.0001)) * totalBudget;
+
+  // Dynamic KPI card palette based on trend state
+  const trendCardColors = isOnTrack
+    ? { borderColor: '#ABEBC6', backgroundColor: '#E9F7EF', iconBg: '#D5F5E3' }
+    : isOver
+      ? { borderColor: '#F5B7B1', backgroundColor: '#FDEDEC', iconBg: '#FADBD8' }
+      : { borderColor: '#AED6F1', backgroundColor: '#EBF5FB', iconBg: '#D6EAF8' };
 
   const quickActions = [
     {
@@ -69,6 +101,21 @@ export default function DashboardScreen() {
           </ThemedText>
         </ThemedView>
 
+        <ThemedView style={styles.trendCard}>
+          <ThemedText type="subtitle" style={styles.cardTitle}>Spending Trends</ThemedText>
+          <View style={styles.trendRows}>
+            <View style={styles.trendRowLine}>
+              <ThemedText style={styles.trendRowLabel}>Weekly Average</ThemedText>
+              <ThemedText type="title">${weeklyAverage.toFixed(2)}</ThemedText>
+            </View>
+            <View style={styles.separator} />
+            <View style={styles.trendRowLine}>
+              <ThemedText style={styles.trendRowLabel}>Monthly Projection</ThemedText>
+              <ThemedText type="title">${monthlyProjection.toFixed(2)}</ThemedText>
+            </View>
+          </View>
+        </ThemedView>
+
         <ThemedView style={styles.budgetCard}>
           <View style={styles.budgetHeader}>
             <ThemedText type="subtitle">Monthly Budget</ThemedText>
@@ -88,12 +135,14 @@ export default function DashboardScreen() {
             </View>
             <View style={styles.budgetStats}>
               <ThemedText style={styles.spentAmount}>Spent: ${totalSpent.toFixed(2)}</ThemedText>
-              <ThemedText style={[
-                styles.remainingAmount,
-                { color: remainingBudget >= 0 ? '#96CEB4' : '#FF6B6B' }
-              ]}>
-                {remainingBudget >= 0 ? 'Remaining' : 'Over budget'}: ${Math.abs(remainingBudget).toFixed(2)}
-              </ThemedText>
+              <View style={styles.budgetRightCol}>
+                <ThemedText style={[
+                  styles.remainingAmount,
+                  { color: remainingBudget >= 0 ? '#96CEB4' : '#FF6B6B' }
+                ]}>
+                  {remainingBudget >= 0 ? 'Remaining' : 'Over budget'}: ${Math.abs(remainingBudget).toFixed(2)}
+                </ThemedText>
+              </View>
             </View>
           </View>
         </ThemedView>
@@ -272,6 +321,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+  budgetRightCol: {
+    alignItems: 'flex-end',
+  },
   spentAmount: {
     fontSize: 16,
     fontWeight: '600',
@@ -279,6 +331,21 @@ const styles = StyleSheet.create({
   remainingAmount: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  trendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 6,
+  },
+  trendText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  trendSubtext: {
+    fontSize: 12,
+    opacity: 0.6,
+    marginTop: 2,
   },
   spendingCard: {
     backgroundColor: 'white',
@@ -350,6 +417,61 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+  },
+  trendCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  kpiRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  kpiCard: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+  },
+  kpiIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  kpiLabel: {
+    fontSize: 12,
+    opacity: 0.7,
+  },
+  kpiValue: {
+    marginTop: 2,
+  },
+  kpiFooter: {
+    marginTop: 10,
+  },
+  trendRows: {
+    marginTop: 4,
+  },
+  trendRowLine: {
+    paddingVertical: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  trendRowLabel: {
+    opacity: 0.7,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#f0f0f0',
   },
   insightItem: {
     marginBottom: 12,

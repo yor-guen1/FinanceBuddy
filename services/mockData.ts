@@ -1,4 +1,4 @@
-import { Transaction, Category } from '../store/slices/transactionsSlice';
+import { Category, Transaction } from '../store/slices/transactionsSlice';
 
 export const mockTransactions: Transaction[] = [
   {

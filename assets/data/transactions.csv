@@ -1,0 +1,22 @@
+id,date,description,category,amount,type,source,merchant
+1,2025-01-01,Salary,8,3500.00,income,bank,Company Inc
+2,2025-01-01,Coffee,1,4.50,expense,manual,Local Cafe
+3,2025-01-02,Groceries,1,62.30,expense,receipt,Whole Foods
+4,2025-01-02,Bus Pass,2,25.00,expense,bank,City Transit
+5,2025-01-03,Streaming Subscription,4,15.99,expense,bank,Netflix
+6,2025-01-03,Electricity Bill,5,95.10,expense,bank,Utility Co
+7,2025-01-04,Lunch,1,12.75,expense,manual,Food Truck
+8,2025-01-04,Pharmacy,6,18.20,expense,manual,City Pharmacy
+9,2025-01-05,Gas,2,45.60,expense,receipt,Shell
+10,2025-01-05,Shopping,3,89.99,expense,manual,Outlet Mall
+11,2025-01-06,Parking,2,8.00,expense,manual,City Parking
+12,2025-01-06,Groceries,1,54.10,expense,receipt,Trader Joe's
+13,2025-01-07,Movie Night,4,22.00,expense,manual,Cinema
+14,2025-01-07,Side Income,8,120.00,income,manual,Freelance
+15,2025-01-08,Internet Bill,5,55.00,expense,bank,ISP
+16,2025-01-08,Dining Out,1,34.25,expense,manual,Pizza Place
+17,2025-01-09,Ride Share,2,17.80,expense,bank,Uber
+18,2025-01-09,Books,7,24.50,expense,manual,Bookstore
+19,2025-01-10,Groceries,1,70.40,expense,receipt,Whole Foods
+20,2025-01-10,Gym Membership,6,29.99,expense,bank,Gym
+
