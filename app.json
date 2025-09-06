@@ -1,15 +1,19 @@
 {
   "expo": {
-    "name": "FinanceBuddy",
-    "slug": "FinanceBuddy",
+    "name": "MoneyMate",
+    "slug": "MoneyMate",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "financebuddy",
+    "scheme": "moneymate",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app needs access to camera to scan receipts and track expenses.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to photo library to select receipt images."
+      }
     },
     "android": {
       "adaptiveIcon": {
