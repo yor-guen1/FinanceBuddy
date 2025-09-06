@@ -1,4 +1,4 @@
-# FinanceBuddy - Personal Finance App MVP
+# MoneyMate - Personal Finance App MVP
 
 A comprehensive React Native personal finance application with AI-powered insights, receipt scanning, and bank integration capabilities.
 
@@ -87,7 +87,7 @@ A comprehensive React Native personal finance application with AI-powered insigh
 ## 🏗 Project Structure
 
 ```
-FinanceBuddy/
+MoneyMate/
 ├── app/                    # App screens and navigation
 │   ├── (tabs)/            # Tab navigation screens
 │   │   ├── index.tsx      # Dashboard
@@ -153,7 +153,7 @@ The app includes comprehensive mock data for development and testing:
 
 1. **Install Dependencies**
    ```bash
-   cd FinanceBuddy
+   cd MoneyMate
    npm install
    ```
 
@@ -267,4 +267,4 @@ For support and questions:
 
 ---
 
-**FinanceBuddy** - Making personal finance management simple, smart, and secure. 💰✨
+**MoneyMate** - Making personal finance management simple, smart, and secure. 💰✨
