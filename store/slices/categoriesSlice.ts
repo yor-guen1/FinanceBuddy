@@ -1,4 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { Category as ApiCategory, apiService } from '@/services/apiService';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface Category {
   id: string;
@@ -16,19 +17,39 @@ interface CategoriesState {
 }
 
 const initialState: CategoriesState = {
-  categories: [
-    { id: '1', name: 'Food & Dining', icon: '🍽️', color: '#FF6B6B', spent: 0 },
-    { id: '2', name: 'Transportation', icon: '🚗', color: '#4ECDC4', spent: 0 },
-    { id: '3', name: 'Shopping', icon: '🛍️', color: '#45B7D1', spent: 0 },
-    { id: '4', name: 'Entertainment', icon: '🎬', color: '#96CEB4', spent: 0 },
-    { id: '5', name: 'Bills & Utilities', icon: '💡', color: '#FFEAA7', spent: 0 },
-    { id: '6', name: 'Healthcare', icon: '🏥', color: '#DDA0DD', spent: 0 },
-    { id: '7', name: 'Education', icon: '📚', color: '#98D8C8', spent: 0 },
-    { id: '8', name: 'Other', icon: '📦', color: '#F7DC6F', spent: 0 },
-  ],
+  categories: [],
   loading: false,
   error: null,
 };
+
+// Helper function to convert API category to local format
+function convertApiCategory(apiCategory: ApiCategory): Category {
+  return {
+    id: apiCategory.id,
+    name: apiCategory.name,
+    icon: apiCategory.icon,
+    color: apiCategory.color,
+    spent: 0, // Will be calculated from transactions
+  };
+}
+
+// Async thunk for fetching categories
+export const fetchCategories = createAsyncThunk(
+  'categories/fetchCategories',
+  async (userId: string) => {
+    console.log('🔄 Categories: Starting fetch for user:', userId);
+    try {
+      const userData = await apiService.getUserData(userId);
+      console.log('✅ Categories: User data received:', userData);
+      const categories = userData.categories.map(convertApiCategory);
+      console.log('✅ Categories: Converted categories:', categories);
+      return categories;
+    } catch (error) {
+      console.error('❌ Categories: Error fetching categories:', error);
+      throw error;
+    }
+  }
+);
 
 const categoriesSlice = createSlice({
   name: 'categories',
@@ -61,6 +82,22 @@ const categoriesSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Fetch categories
+      .addCase(fetchCategories.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCategories.fulfilled, (state, action) => {
+        state.loading = false;
+        state.categories = action.payload;
+      })
+      .addCase(fetchCategories.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to fetch categories';
+      });
   },
 });
 

@@ -1,4 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { apiService, Transaction as ApiTransaction } from '@/services/apiService';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface Transaction {
   id: string;
@@ -7,7 +8,7 @@ export interface Transaction {
   category: string;
   date: string;
   type: 'expense' | 'income';
-  source: 'manual' | 'bank' | 'receipt';
+  source: 'manual' | 'bank' | 'receipt' | 'ai';
   merchant?: string;
   location?: string;
 }
@@ -23,6 +24,57 @@ const initialState: TransactionsState = {
   loading: false,
   error: null,
 };
+
+// Helper function to convert API transaction to local format
+function convertApiTransaction(apiTransaction: ApiTransaction): Transaction {
+  return {
+    id: apiTransaction.id,
+    amount: apiTransaction.amount,
+    description: apiTransaction.description,
+    category: apiTransaction.categoryId || 'other',
+    date: apiTransaction.transactionDate,
+    type: apiTransaction.type,
+    source: apiTransaction.source,
+    merchant: apiTransaction.merchant,
+    location: apiTransaction.location,
+  };
+}
+
+// Async thunks for API calls
+export const fetchTransactions = createAsyncThunk(
+  'transactions/fetchTransactions',
+  async (userId: string) => {
+    console.log('🔄 Transactions: Starting fetch for user:', userId);
+    try {
+      const userData = await apiService.getUserData(userId);
+      console.log('✅ Transactions: User data received:', userData);
+      const transactions = userData.transactions.map(convertApiTransaction);
+      console.log('✅ Transactions: Converted transactions:', transactions);
+      return transactions;
+    } catch (error) {
+      console.error('❌ Transactions: Error fetching transactions:', error);
+      throw error;
+    }
+  }
+);
+
+export const createTransactionAsync = createAsyncThunk(
+  'transactions/createTransaction',
+  async (transaction: Omit<Transaction, 'id'>) => {
+    const apiTransaction = await apiService.createTransaction({
+      userId: '550e8400-e29b-41d4-a716-446655440000', // Hardcoded for now
+      amount: transaction.amount,
+      description: transaction.description,
+      categoryId: transaction.category,
+      type: transaction.type,
+      source: transaction.source,
+      merchant: transaction.merchant,
+      location: transaction.location,
+      transactionDate: transaction.date,
+    });
+    return convertApiTransaction(apiTransaction);
+  }
+);
 
 const transactionsSlice = createSlice({
   name: 'transactions',
@@ -49,6 +101,35 @@ const transactionsSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Fetch transactions
+      .addCase(fetchTransactions.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchTransactions.fulfilled, (state, action) => {
+        state.loading = false;
+        state.transactions = action.payload;
+      })
+      .addCase(fetchTransactions.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to fetch transactions';
+      })
+      // Create transaction
+      .addCase(createTransactionAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createTransactionAsync.fulfilled, (state, action) => {
+        state.loading = false;
+        state.transactions.unshift(action.payload);
+      })
+      .addCase(createTransactionAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to create transaction';
+      });
   },
 });
 

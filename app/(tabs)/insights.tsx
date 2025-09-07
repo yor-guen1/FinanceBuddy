@@ -1,47 +1,65 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { getSpendingByCategory, mockInsights } from '@/services/mockData';
+import { AppDispatch, RootState } from '@/store';
+import { fetchCategories } from '@/store/slices/categoriesSlice';
+import { fetchTransactions } from '@/store/slices/transactionsSlice';
+import React, { useEffect } from 'react';
+import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDispatch, useSelector } from 'react-redux';
 
 const { width } = Dimensions.get('window');
 
 export default function InsightsScreen() {
-  const spendingData = [
-    { category: 'Food & Dining', amount: 145.50, percentage: 35, color: '#FF6B6B' },
-    { category: 'Transportation', amount: 134.50, percentage: 32, color: '#4ECDC4' },
-    { category: 'Bills & Utilities', amount: 200.00, percentage: 48, color: '#FFEAA7' },
-    { category: 'Entertainment', amount: 15.99, percentage: 4, color: '#96CEB4' },
-    { category: 'Healthcare', amount: 75.00, percentage: 18, color: '#DDA0DD' },
-  ];
-
-  const insights = [
-    {
-      id: '1',
-      type: 'warning',
-      title: 'Budget Alert',
-      message: 'You\'re spending 48% more on dining this week compared to last week',
-      category: 'Food & Dining',
-      priority: 'high',
-    },
-    {
-      id: '2',
-      type: 'tip',
-      title: 'Savings Tip',
-      message: 'Consider using public transportation more often to reduce transportation costs',
-      category: 'Transportation',
-      priority: 'medium',
-    },
-    {
-      id: '3',
-      type: 'achievement',
-      title: 'Great Job!',
-      message: 'You stayed under budget for entertainment expenses this month',
-      category: 'Entertainment',
-      priority: 'low',
-    },
-  ];
+  const dispatch = useDispatch<AppDispatch>();
+  
+  // Redux state
+  const transactions = useSelector((state: RootState) => state.transactions.transactions);
+  const categories = useSelector((state: RootState) => state.categories.categories);
+  const transactionsLoading = useSelector((state: RootState) => state.transactions.loading);
+  const categoriesLoading = useSelector((state: RootState) => state.categories.loading);
+  const transactionsError = useSelector((state: RootState) => state.transactions.error);
+  const categoriesError = useSelector((state: RootState) => state.categories.error);
+  
+  // Test user ID (hardcoded for now)
+  const userId = '550e8400-e29b-41d4-a716-446655440000';
+  
+  // Fetch data on component mount
+  useEffect(() => {
+    dispatch(fetchTransactions(userId));
+    dispatch(fetchCategories(userId));
+  }, [dispatch, userId]);
+  
+  // Show loading state
+  if (transactionsLoading || categoriesLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={styles.loadingText}>Loading insights...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+  
+  // Show error state
+  if (transactionsError || categoriesError) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>
+            {transactionsError || categoriesError}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+  
+  // Calculate spending data from transactions
+  const spendingData = getSpendingByCategory(transactions || [], categories || []);
+  const insights = mockInsights; // For now, keep using mock insights
 
   const getInsightIcon = (type: string) => {
     switch (type) {
@@ -88,14 +106,14 @@ export default function InsightsScreen() {
         <ThemedView style={styles.chartCard}>
           <ThemedText type="subtitle" style={styles.cardTitle}>Spending by Category</ThemedText>
           <View style={styles.chartContainer}>
-            {spendingData.map((item, index) => (
+            {spendingData && spendingData.length > 0 ? spendingData.map((item, index) => (
               <View key={index} style={styles.chartItem}>
                 <View style={styles.chartRow}>
                   <View style={styles.categoryInfo}>
                     <View style={[styles.categoryDot, { backgroundColor: item.color }]} />
                     <ThemedText style={styles.categoryName}>{item.category}</ThemedText>
                   </View>
-                  <ThemedText style={styles.categoryAmount}>${item.amount.toFixed(2)}</ThemedText>
+                  <ThemedText style={styles.categoryAmount}>${(item.spent || 0).toFixed(2)}</ThemedText>
                 </View>
                 <View style={styles.progressBar}>
                   <View 
@@ -108,9 +126,11 @@ export default function InsightsScreen() {
                     ]} 
                   />
                 </View>
-                <ThemedText style={styles.percentageText}>{item.percentage}%</ThemedText>
+                <ThemedText style={styles.percentageText}>{(item.percentage || 0).toFixed(1)}%</ThemedText>
               </View>
-            ))}
+            )) : (
+              <ThemedText style={styles.noDataText}>No spending data available</ThemedText>
+            )}
           </View>
         </ThemedView>
 
@@ -361,5 +381,34 @@ const styles = StyleSheet.create({
   trendChangeText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#FF3B30',
+    textAlign: 'center',
+  },
+  noDataText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    paddingVertical: 20,
   },
 });

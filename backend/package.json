@@ -1,0 +1,31 @@
+{
+    "name": "moneymate-backend",
+    "version": "1.0.0",
+    "description": "MoneyMate Backend API",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server-sqlite.js",
+        "dev": "nodemon server-sqlite.js",
+        "setup-db": "node setup-sqlite.js",
+        "setup-postgres": "node setup-db.js",
+        "reset-db": "node setup-sqlite.js"
+    },
+    "dependencies": {
+        "express": "^4.18.2",
+        "cors": "^2.8.5",
+        "pg": "^8.11.3",
+        "sqlite3": "^5.1.6",
+        "dotenv": "^16.3.1"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.1"
+    },
+    "keywords": [
+        "finance",
+        "expense",
+        "tracking",
+        "api"
+    ],
+    "author": "MoneyMate Team",
+    "license": "MIT"
+}

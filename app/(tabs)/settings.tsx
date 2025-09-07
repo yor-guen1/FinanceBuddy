@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import BudgetGoalsModal from '@/components/BudgetGoalsModal';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import React, { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SettingsScreen() {
   const [budgetPeriod, setBudgetPeriod] = useState<'weekly' | 'monthly'>('monthly');
@@ -16,6 +17,7 @@ export default function SettingsScreen() {
     dataSharing: false,
     analytics: true,
   });
+  const [showBudgetGoalsModal, setShowBudgetGoalsModal] = useState(false);
 
   const handleBudgetPeriodChange = () => {
     Alert.alert(
@@ -30,11 +32,7 @@ export default function SettingsScreen() {
   };
 
   const handleBudgetGoalChange = () => {
-    Alert.alert(
-      'Budget Goals',
-      'This would open a budget goal setting screen where you can set spending limits for each category.',
-      [{ text: 'OK' }]
-    );
+    setShowBudgetGoalsModal(true);
   };
 
   const handleBankConnection = () => {
@@ -278,6 +276,11 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </ThemedView>
       </ScrollView>
+      
+      <BudgetGoalsModal
+        visible={showBudgetGoalsModal}
+        onClose={() => setShowBudgetGoalsModal(false)}
+      />
     </SafeAreaView>
   );
 }

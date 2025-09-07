@@ -1,18 +1,24 @@
+import AddExpenseModal from '@/components/AddExpenseModal';
+import AIExpenseModal from '@/components/AIExpenseModal';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { OCRService } from '@/services/ocrService';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ScannerScreen() {
+  const router = useRouter();
   const [isScanning, setIsScanning] = useState(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
+  const [showAIExpenseModal, setShowAIExpenseModal] = useState(false);
 
   const handleScanReceipt = async () => {
     if (!cameraPermission?.granted) {
@@ -76,9 +82,23 @@ export default function ScannerScreen() {
       if (extractedText && extractedText.trim().length > 0) {
         Alert.alert(
           'Receipt Text Extracted Successfully!',
-          extractedText,
+          'Would you like to use AI to automatically categorize and add this expense?',
           [
-            { text: 'OK', onPress: () => setCapturedImage(null) }
+            { 
+              text: 'Manual Entry', 
+              onPress: () => {
+                setCapturedImage(null);
+                setShowAddExpenseModal(true);
+              }
+            },
+            { 
+              text: 'Use AI Analysis', 
+              onPress: () => {
+                setCapturedImage(imageUri);
+                setShowAIExpenseModal(true);
+              }
+            },
+            { text: 'Cancel', onPress: () => setCapturedImage(null) }
           ]
         );
       } else {
@@ -106,11 +126,12 @@ export default function ScannerScreen() {
 
   const handleConnectBank = () => {
     Alert.alert(
-      'Bank Connection',
-      'This would open a secure bank connection flow using Plaid or similar service.',
+      'Connect Bank Account',
+      'This feature will allow you to automatically import transactions from your bank account using secure banking APIs like Plaid or Yodlee.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Connect Bank', onPress: () => console.log('Connect bank') },
+        { text: 'Learn More', onPress: () => console.log('Learn more about bank connection') },
+        { text: 'Connect', onPress: () => console.log('Connect bank account') },
       ]
     );
   };
@@ -215,7 +236,10 @@ export default function ScannerScreen() {
             <IconSymbol name="chevron.right" size={16} color="#666" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => setShowAddExpenseModal(true)}
+          >
             <View style={styles.actionIcon}>
               <IconSymbol name="plus.circle.fill" size={24} color="#96CEB4" />
             </View>
@@ -228,7 +252,10 @@ export default function ScannerScreen() {
             <IconSymbol name="chevron.right" size={16} color="#666" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => router.push('/insights')}
+          >
             <View style={styles.actionIcon}>
               <IconSymbol name="chart.bar.fill" size={24} color="#FFEAA7" />
             </View>
@@ -253,6 +280,17 @@ export default function ScannerScreen() {
           </ThemedView>
         </ThemedView>
       </ScrollView>
+      
+      <AddExpenseModal
+        visible={showAddExpenseModal}
+        onClose={() => setShowAddExpenseModal(false)}
+      />
+      
+      <AIExpenseModal
+        visible={showAIExpenseModal}
+        onClose={() => setShowAIExpenseModal(false)}
+        receiptImageUri={capturedImage || undefined}
+      />
     </SafeAreaView>
   );
 }

@@ -57,15 +57,17 @@ export class OCRService {
       }
 
       const result = await response.json();
+      console.log('🔍 OCR API Response:', JSON.stringify(result, null, 2));
       
       if (result.ParsedResults && result.ParsedResults.length > 0) {
         const extractedText = result.ParsedResults[0].ParsedText;
+        console.log('📄 EXTRACTED TEXT FROM IMAGE:', extractedText);
         if (extractedText && extractedText.trim().length > 0) {
           return extractedText;
         }
       }
       
-      throw new Error('No text found in image');
+      throw new Error('No text found in image. Please ensure the receipt is clear and well-lit.');
     } catch (error) {
       console.error('OCR extraction failed:', error);
       // Try alternative OCR approach
@@ -102,9 +104,11 @@ export class OCRService {
       }
 
       const result = await response.json();
+      console.log('🔄 Alternative OCR API Response:', JSON.stringify(result, null, 2));
       
       if (result.ParsedResults && result.ParsedResults.length > 0) {
         const extractedText = result.ParsedResults[0].ParsedText;
+        console.log('📄 ALTERNATIVE OCR EXTRACTED TEXT:', extractedText);
         if (extractedText && extractedText.trim().length > 0) {
           return extractedText;
         }
@@ -305,104 +309,19 @@ Tax: $2.46
     };
   }
 
-  // Categorize individual item
+  // Categorize individual item using centralized category service
   private static categorizeItem(itemName: string, merchant: string): string {
-    const itemLower = itemName.toLowerCase();
-    const merchantLower = merchant.toLowerCase();
-    
-    const categoryMap: { [key: string]: string } = {
-      'mcdonald': 'Food & Dining',
-      'burger': 'Food & Dining',
-      'pizza': 'Food & Dining',
-      'restaurant': 'Food & Dining',
-      'cafe': 'Food & Dining',
-      'coffee': 'Food & Dining',
-      'gas': 'Transportation',
-      'fuel': 'Transportation',
-      'uber': 'Transportation',
-      'lyft': 'Transportation',
-      'taxi': 'Transportation',
-      'grocery': 'Food & Dining',
-      'market': 'Food & Dining',
-      'pharmacy': 'Healthcare',
-      'medical': 'Healthcare',
-      'doctor': 'Healthcare',
-      'entertainment': 'Entertainment',
-      'movie': 'Entertainment',
-      'netflix': 'Entertainment',
-      'spotify': 'Entertainment',
-      'utility': 'Bills & Utilities',
-      'electric': 'Bills & Utilities',
-      'water': 'Bills & Utilities',
-      'internet': 'Bills & Utilities',
-    };
-    
-    // Check merchant name first
-    for (const [keyword, category] of Object.entries(categoryMap)) {
-      if (merchantLower.includes(keyword)) {
-        return category;
-      }
-    }
-    
-    // Check item name
-    for (const [keyword, category] of Object.entries(categoryMap)) {
-      if (itemLower.includes(keyword)) {
-        return category;
-      }
-    }
-    
-    return 'Other';
+    const { CategoryService } = require('./categoryService');
+    return CategoryService.categorizeItem(itemName, merchant);
   }
 
-  // Categorize items based on merchant and item names
+  // Categorize items based on merchant and item names using centralized service
   static categorizeItems(items: ReceiptItem[], merchant: string): ReceiptItem[] {
-    const categoryMap: { [key: string]: string } = {
-      'mcdonald': 'Food & Dining',
-      'burger': 'Food & Dining',
-      'pizza': 'Food & Dining',
-      'restaurant': 'Food & Dining',
-      'cafe': 'Food & Dining',
-      'coffee': 'Food & Dining',
-      'gas': 'Transportation',
-      'fuel': 'Transportation',
-      'uber': 'Transportation',
-      'lyft': 'Transportation',
-      'taxi': 'Transportation',
-      'grocery': 'Food & Dining',
-      'market': 'Food & Dining',
-      'pharmacy': 'Healthcare',
-      'medical': 'Healthcare',
-      'doctor': 'Healthcare',
-      'entertainment': 'Entertainment',
-      'movie': 'Entertainment',
-      'netflix': 'Entertainment',
-      'spotify': 'Entertainment',
-      'utility': 'Bills & Utilities',
-      'electric': 'Bills & Utilities',
-      'water': 'Bills & Utilities',
-      'internet': 'Bills & Utilities',
-    };
-
+    const { CategoryService } = require('./categoryService');
+    
     return items.map(item => {
-      const itemName = item.name.toLowerCase();
-      const merchantName = merchant.toLowerCase();
-      
-      // Check merchant name first
-      for (const [keyword, category] of Object.entries(categoryMap)) {
-        if (merchantName.includes(keyword)) {
-          return { ...item, category };
-        }
-      }
-      
-      // Check item name
-      for (const [keyword, category] of Object.entries(categoryMap)) {
-        if (itemName.includes(keyword)) {
-          return { ...item, category };
-        }
-      }
-      
-      // Default category
-      return { ...item, category: 'Other' };
+      const category = CategoryService.categorizeItem(item.name, merchant);
+      return { ...item, category };
     });
   }
 

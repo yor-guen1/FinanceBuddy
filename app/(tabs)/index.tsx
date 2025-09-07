@@ -1,43 +1,134 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import AddExpenseModal from '@/components/AddExpenseModal';
+import PieChart from '@/components/PieChart';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { mockTransactions, mockCategories, mockInsights, getSpendingByCategory } from '@/services/mockData';
+import { getSpendingByCategory, mockCategories, mockInsights, mockTransactions } from '@/services/mockData';
+import { AppDispatch, RootState } from '@/store';
+import { fetchCategories } from '@/store/slices/categoriesSlice';
+import { fetchTransactions } from '@/store/slices/transactionsSlice';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDispatch, useSelector } from 'react-redux';
 
 const { width } = Dimensions.get('window');
 
 export default function DashboardScreen() {
-  const spendingData = getSpendingByCategory(mockTransactions, mockCategories);
+  const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  
+  // Redux state
+  const transactions = useSelector((state: RootState) => state.transactions.transactions);
+  const categories = useSelector((state: RootState) => state.categories.categories);
+  const transactionsLoading = useSelector((state: RootState) => state.transactions.loading);
+  const categoriesLoading = useSelector((state: RootState) => state.categories.loading);
+  const transactionsError = useSelector((state: RootState) => state.transactions.error);
+  const categoriesError = useSelector((state: RootState) => state.categories.error);
+  
+  // Local state
+  const [currentSpendingView, setCurrentSpendingView] = useState(0);
+  const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
+  
+  // Test user ID (hardcoded for now)
+  const userId = '550e8400-e29b-41d4-a716-446655440000';
+  
+  // Fetch data on component mount
+  useEffect(() => {
+    dispatch(fetchTransactions(userId));
+    dispatch(fetchCategories(userId));
+  }, [dispatch, userId]);
+  
+  // Use fetched data or fallback to mock data
+  const allTransactions = transactions.length > 0 ? transactions : mockTransactions;
+  const allCategories = categories.length > 0 ? categories : mockCategories;
+  const spendingData = getSpendingByCategory(allTransactions, allCategories);
   const totalSpent = spendingData.reduce((sum, category) => sum + category.spent, 0);
   const totalBudget = 2000;
   const remainingBudget = totalBudget - totalSpent;
 
+  // Show loading state
+  if (transactionsLoading || categoriesLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={styles.loadingText}>Loading your financial data...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+  
+  // Show error state
+  if (transactionsError || categoriesError) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>
+            {transactionsError || categoriesError}
+          </Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={() => {
+              dispatch(fetchTransactions(userId));
+              dispatch(fetchCategories(userId));
+            }}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Prepare data for pie chart (only categories with spending)
+  const pieChartData = spendingData
+    .filter(category => category.spent > 0)
+    .map(category => ({
+      id: category.id,
+      name: category.name,
+      value: category.spent,
+      color: category.color,
+      percentage: category.percentage,
+    }));
+
+  const handleConnectBank = () => {
+    Alert.alert(
+      'Connect Bank Account',
+      'This feature will allow you to automatically import transactions from your bank account using secure banking APIs like Plaid or Yodlee.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Learn More', onPress: () => console.log('Learn more about bank connection') },
+        { text: 'Connect', onPress: () => console.log('Connect bank account') },
+      ]
+    );
+  };
+
   const quickActions = [
     {
       id: '1',
+      title: 'Add Expense',
+      subtitle: 'Enter expense manually',
+      icon: 'plus.circle.fill',
+      color: '#96CEB4',
+      onPress: () => setShowAddExpenseModal(true),
+    },
+    {
+      id: '2',
       title: 'Scan Receipt',
       subtitle: 'Add expense from receipt',
       icon: 'camera.fill',
       color: '#4ECDC4',
-      onPress: () => console.log('Scan receipt'),
+      onPress: () => router.push('/scanner'),
     },
     {
-      id: '2',
+      id: '3',
       title: 'Connect Bank',
       subtitle: 'Import transactions',
       icon: 'building.2.fill',
       color: '#45B7D1',
-      onPress: () => console.log('Connect bank'),
-    },
-    {
-      id: '3',
-      title: 'Weekly Report',
-      subtitle: 'View insights',
-      icon: 'chart.bar.fill',
-      color: '#96CEB4',
-      onPress: () => console.log('Weekly report'),
+      onPress: handleConnectBank,
     },
   ];
 
@@ -57,6 +148,42 @@ export default function DashboardScreen() {
       case 'achievement': return '#96CEB4';
       default: return '#666';
     }
+  };
+
+  const goToView = (index: number) => {
+    setCurrentSpendingView(index);
+  };
+
+  const handleViewAllCategories = () => {
+    router.push('/insights');
+  };
+
+  const handleViewAllTransactions = () => {
+    // For now, show an alert. In a real app, this would navigate to a transactions screen
+    Alert.alert(
+      'All Transactions',
+      'This would show a detailed list of all your transactions with filtering and search options.',
+      [{ text: 'OK' }]
+    );
+  };
+
+  const handleSetReminder = () => {
+    Alert.alert(
+      'Set Reminder',
+      'You will be reminded to check your weekly financial report in 2 days.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Set Reminder', onPress: () => console.log('Reminder set') },
+      ]
+    );
+  };
+
+  const handleTransactionPress = (transaction: any) => {
+    Alert.alert(
+      'Transaction Details',
+      `Description: ${transaction.description}\nAmount: $${transaction.amount.toFixed(2)}\nDate: ${new Date(transaction.date).toLocaleDateString()}\nCategory: ${transaction.category}`,
+      [{ text: 'OK' }]
+    );
   };
 
   return (
@@ -99,27 +226,62 @@ export default function DashboardScreen() {
         </ThemedView>
 
         <ThemedView style={styles.spendingCard}>
-          <ThemedText type="subtitle" style={styles.cardTitle}>Spending by Category</ThemedText>
-          <View style={styles.categoriesList}>
-            {spendingData.slice(0, 4).map((category) => (
-              <View key={category.id} style={styles.categoryItem}>
-                <View style={styles.categoryInfo}>
-                  <Text style={styles.categoryIcon}>{category.icon}</Text>
-                  <View style={styles.categoryDetails}>
-                    <ThemedText style={styles.categoryName}>{category.name}</ThemedText>
-                    <ThemedText style={styles.categoryPercentage}>
-                      {category.percentage.toFixed(1)}%
-                    </ThemedText>
-                  </View>
-                </View>
-                <ThemedText style={styles.categoryAmount}>${category.spent.toFixed(2)}</ThemedText>
-              </View>
-            ))}
+          <View style={styles.spendingHeader}>
+            <ThemedText type="subtitle" style={styles.cardTitle}>Spending Analysis</ThemedText>
+            <View style={styles.viewTabs}>
+              <TouchableOpacity 
+                style={[styles.tab, currentSpendingView === 0 && styles.activeTab]}
+                onPress={() => goToView(0)}
+              >
+                <ThemedText style={[styles.tabText, currentSpendingView === 0 && styles.activeTabText]}>
+                  List
+                </ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.tab, currentSpendingView === 1 && styles.activeTab]}
+                onPress={() => goToView(1)}
+              >
+                <ThemedText style={[styles.tabText, currentSpendingView === 1 && styles.activeTabText]}>
+                  Chart
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
           </View>
-          <TouchableOpacity style={styles.viewAllButton}>
-            <ThemedText style={styles.viewAllText}>View All Categories</ThemedText>
-            <IconSymbol name="chevron.right" size={16} color="#4ECDC4" />
-          </TouchableOpacity>
+          
+          <View style={styles.swipeContainer}>
+            {/* List View */}
+            {currentSpendingView === 0 && (
+              <View style={styles.swipePage}>
+                <View style={styles.categoriesList}>
+                  {spendingData.slice(0, 4).map((category) => (
+                    <View key={category.id} style={styles.categoryItem}>
+                      <View style={styles.categoryInfo}>
+                        <Text style={styles.categoryIcon}>{category.icon}</Text>
+                        <View style={styles.categoryDetails}>
+                          <ThemedText style={styles.categoryName}>{category.name}</ThemedText>
+                          <ThemedText style={styles.categoryPercentage}>
+                            {category.percentage.toFixed(1)}%
+                          </ThemedText>
+                        </View>
+                      </View>
+                      <ThemedText style={styles.categoryAmount}>${category.spent.toFixed(2)}</ThemedText>
+                    </View>
+                  ))}
+                </View>
+                <TouchableOpacity style={styles.viewAllButton} onPress={handleViewAllCategories}>
+                  <ThemedText style={styles.viewAllText}>View All Categories</ThemedText>
+                  <IconSymbol name="chevron.right" size={16} color="#4ECDC4" />
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Chart View */}
+            {currentSpendingView === 1 && (
+              <View style={styles.swipePage}>
+                <PieChart data={pieChartData} size={180} />
+              </View>
+            )}
+          </View>
         </ThemedView>
 
         <ThemedView style={styles.insightsCard}>
@@ -152,7 +314,7 @@ export default function DashboardScreen() {
                 onPress={action.onPress}
               >
                 <View style={[styles.actionIcon, { backgroundColor: action.color + '20' }]}>
-                  <IconSymbol name={action.icon} size={24} color={action.color} />
+                  <IconSymbol name={action.icon as any} size={24} color={action.color} />
                 </View>
                 <ThemedText type="defaultSemiBold" style={styles.actionTitle}>
                   {action.title}
@@ -168,13 +330,13 @@ export default function DashboardScreen() {
         <ThemedView style={styles.recentTransactionsCard}>
           <View style={styles.transactionsHeader}>
             <ThemedText type="subtitle">Recent Transactions</ThemedText>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={handleViewAllTransactions}>
               <ThemedText style={styles.viewAllText}>View All</ThemedText>
             </TouchableOpacity>
           </View>
           <View style={styles.transactionsList}>
-            {mockTransactions.slice(0, 3).map((transaction) => (
-              <View key={transaction.id} style={styles.transactionItem}>
+            {allTransactions.slice(0, 3).map((transaction) => (
+              <TouchableOpacity key={transaction.id} style={styles.transactionItem} onPress={() => handleTransactionPress(transaction)}>
                 <View style={styles.transactionInfo}>
                   <Text style={styles.transactionIcon}>
                     {mockCategories.find(c => c.id === transaction.category)?.icon || '📦'}
@@ -194,7 +356,7 @@ export default function DashboardScreen() {
                 ]}>
                   {transaction.type === 'expense' ? '-' : '+'}${transaction.amount.toFixed(2)}
                 </ThemedText>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         </ThemedView>
@@ -209,11 +371,16 @@ export default function DashboardScreen() {
               </ThemedText>
             </View>
           </View>
-          <TouchableOpacity style={styles.remindButton}>
+          <TouchableOpacity style={styles.remindButton} onPress={handleSetReminder}>
             <ThemedText style={styles.remindButtonText}>Set Reminder</ThemedText>
           </TouchableOpacity>
         </ThemedView>
       </ScrollView>
+      
+      <AddExpenseModal
+        visible={showAddExpenseModal}
+        onClose={() => setShowAddExpenseModal(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -290,6 +457,41 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+  },
+  spendingHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  viewTabs: {
+    flexDirection: 'row',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    padding: 2,
+  },
+  tab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  activeTab: {
+    backgroundColor: '#4ECDC4',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#666',
+  },
+  activeTabText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  swipeContainer: {
+    minHeight: 280,
+  },
+  swipePage: {
+    width: '100%',
   },
   cardTitle: {
     marginBottom: 16,
@@ -500,6 +702,41 @@ const styles = StyleSheet.create({
   remindButtonText: {
     color: 'white',
     fontSize: 14,
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#FF3B30',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 16,
     fontWeight: '600',
   },
 });

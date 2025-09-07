@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { IconSymbol } from './ui/IconSymbol';
 
@@ -10,7 +10,7 @@ interface Transaction {
   category: string;
   date: string;
   type: 'expense' | 'income';
-  source: 'manual' | 'bank' | 'receipt';
+  source: 'manual' | 'bank' | 'receipt' | 'ai';
   merchant?: string;
   location?: string;
 }
@@ -43,6 +43,7 @@ export default function TransactionCard({
       case 'receipt': return 'camera.fill';
       case 'bank': return 'building.2.fill';
       case 'manual': return 'pencil';
+      case 'ai': return 'brain.head.profile';
       default: return 'questionmark.circle';
     }
   };
