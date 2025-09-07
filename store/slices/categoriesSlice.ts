@@ -23,13 +23,18 @@ const initialState: CategoriesState = {
 };
 
 // Helper function to convert API category to local format
-function convertApiCategory(apiCategory: ApiCategory): Category {
+function convertApiCategory(apiCategory: ApiCategory, transactions: any[] = []): Category {
+  // Calculate spent amount for this category from transactions
+  const spent = transactions
+    .filter(tx => tx.category === apiCategory.id && tx.type === 'expense')
+    .reduce((sum, tx) => sum + (tx.amount || 0), 0);
+
   return {
     id: apiCategory.id,
     name: apiCategory.name,
     icon: apiCategory.icon,
     color: apiCategory.color,
-    spent: 0, // Will be calculated from transactions
+    spent: spent,
   };
 }
 
@@ -41,12 +46,15 @@ export const fetchCategories = createAsyncThunk(
     try {
       const userData = await apiService.getUserData(userId);
       console.log('✅ Categories: User data received:', userData);
-      const categories = userData.categories.map(convertApiCategory);
+      const categories = userData.categories.map(cat => convertApiCategory(cat, userData.transactions));
       console.log('✅ Categories: Converted categories:', categories);
       return categories;
     } catch (error) {
       console.error('❌ Categories: Error fetching categories:', error);
-      throw error;
+      console.log('🔄 Categories: Falling back to mock data...');
+      // Import mock data as fallback
+      const { mockCategories } = await import('@/services/mockData');
+      return mockCategories;
     }
   }
 );

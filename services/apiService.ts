@@ -10,16 +10,16 @@ export interface Transaction {
   userId: string;
   amount: number;
   description: string;
-  categoryId?: string;
+  category_id?: string;
   type: 'expense' | 'income';
   source: 'manual' | 'bank' | 'receipt' | 'ai';
   merchant?: string;
   location?: string;
-  transactionDate: string;
-  createdAt: string;
-  categoryName?: string;
-  categoryIcon?: string;
-  categoryColor?: string;
+  transaction_date: string;
+  created_at: string;
+  category_name?: string;
+  category_icon?: string;
+  category_color?: string;
 }
 
 export interface Category {
@@ -62,25 +62,48 @@ class ApiService {
     const url = `${API_BASE_URL}${endpoint}`;
     console.log('🔍 API Request:', url);
     
-    const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    });
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+        ...options,
+      });
 
-    console.log('📡 API Response Status:', response.status);
+      console.log('📡 API Response Status:', response.status);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ API Error:', response.status, errorText);
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API Error:', response.status, errorText);
+        
+        // Provide specific error messages
+        if (response.status === 404) {
+          throw new Error('Database not found. Please check if the backend is running.');
+        } else if (response.status === 500) {
+          throw new Error('Database error. Please check the backend logs.');
+        } else if (response.status === 0 || !response.status) {
+          throw new Error('Network error. Please check your internet connection and backend server.');
+        } else {
+          throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+        }
+      }
+
+      const data = await response.json();
+      console.log('✅ API Response Data:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ API Request Error:', error);
+      
+      // Handle different types of errors
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error('Network request failed. Please check if the backend server is running.');
+      } else if (error.name === 'AbortError') {
+        throw new Error('Request timeout. Please try again.');
+      } else {
+        throw error;
+      }
     }
-
-    const data = await response.json();
-    console.log('✅ API Response Data:', data);
-    return data;
   }
 
   // User endpoints

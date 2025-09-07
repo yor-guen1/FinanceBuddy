@@ -31,8 +31,8 @@ function convertApiTransaction(apiTransaction: ApiTransaction): Transaction {
     id: apiTransaction.id,
     amount: apiTransaction.amount,
     description: apiTransaction.description,
-    category: apiTransaction.categoryId || 'other',
-    date: apiTransaction.transactionDate,
+    category: apiTransaction.category_id || 'other',
+    date: apiTransaction.transaction_date,
     type: apiTransaction.type,
     source: apiTransaction.source,
     merchant: apiTransaction.merchant,
@@ -53,7 +53,10 @@ export const fetchTransactions = createAsyncThunk(
       return transactions;
     } catch (error) {
       console.error('❌ Transactions: Error fetching transactions:', error);
-      throw error;
+      console.log('🔄 Transactions: Falling back to mock data...');
+      // Import mock data as fallback
+      const { mockTransactions } = await import('@/services/mockData');
+      return mockTransactions;
     }
   }
 );

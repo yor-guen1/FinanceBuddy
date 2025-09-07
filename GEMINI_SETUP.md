@@ -148,3 +148,4 @@ Once Gemini is working:
 
 The AI agent is now ready to intelligently read receipt text and populate your database with structured, categorized data!
 
+

@@ -27,6 +27,10 @@ interface BudgetGoalsModalProps {
 export default function BudgetGoalsModal({ visible, onClose }: BudgetGoalsModalProps) {
   const dispatch = useDispatch();
   const budgetGoals = useSelector((state: RootState) => state.budget.goals);
+  const categories = useSelector((state: RootState) => state.categories.categories);
+  
+  // Use real categories if available, fallback to mock data
+  const allCategories = categories && categories.length > 0 ? categories : mockCategories;
   const [editingGoal, setEditingGoal] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -116,11 +120,11 @@ export default function BudgetGoalsModal({ visible, onClose }: BudgetGoalsModalP
   };
 
   const getCategoryName = (categoryId: string) => {
-    return mockCategories.find(c => c.id === categoryId)?.name || 'Unknown';
+    return allCategories.find(c => c.id === categoryId)?.name || 'Unknown';
   };
 
   const getCategoryIcon = (categoryId: string) => {
-    return mockCategories.find(c => c.id === categoryId)?.icon || '📦';
+    return allCategories.find(c => c.id === categoryId)?.icon || '📦';
   };
 
   return (
@@ -156,7 +160,7 @@ export default function BudgetGoalsModal({ visible, onClose }: BudgetGoalsModalP
                 showsHorizontalScrollIndicator={false}
                 style={styles.categoriesContainer}
               >
-                {mockCategories.map((category) => (
+                {allCategories.map((category) => (
                   <TouchableOpacity
                     key={category.id}
                     style={[

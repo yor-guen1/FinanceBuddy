@@ -1,7 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit';
-import transactionsReducer from './slices/transactionsSlice';
-import categoriesReducer from './slices/categoriesSlice';
+import budgetSettingsReducer from './slices/budgetSettingsSlice';
 import budgetReducer from './slices/budgetSlice';
+import categoriesReducer from './slices/categoriesSlice';
+import transactionsReducer from './slices/transactionsSlice';
 import userReducer from './slices/userSlice';
 
 export const store = configureStore({
@@ -9,6 +10,7 @@ export const store = configureStore({
     transactions: transactionsReducer,
     categories: categoriesReducer,
     budget: budgetReducer,
+    budgetSettings: budgetSettingsReducer,
     user: userReducer,
   },
 });

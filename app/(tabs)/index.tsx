@@ -22,6 +22,8 @@ export default function DashboardScreen() {
   // Redux state
   const transactions = useSelector((state: RootState) => state.transactions.transactions);
   const categories = useSelector((state: RootState) => state.categories.categories);
+  const budgetPeriod = useSelector((state: RootState) => state.budgetSettings.period);
+  const totalBudget = useSelector((state: RootState) => state.budgetSettings.totalBudget);
   const transactionsLoading = useSelector((state: RootState) => state.transactions.loading);
   const categoriesLoading = useSelector((state: RootState) => state.categories.loading);
   const transactionsError = useSelector((state: RootState) => state.transactions.error);
@@ -38,14 +40,25 @@ export default function DashboardScreen() {
   useEffect(() => {
     dispatch(fetchTransactions(userId));
     dispatch(fetchCategories(userId));
-  }, [dispatch, userId]);
+  }, [dispatch]);
   
-  // Use fetched data or fallback to mock data
-  const allTransactions = transactions.length > 0 ? transactions : mockTransactions;
-  const allCategories = categories.length > 0 ? categories : mockCategories;
-  const spendingData = getSpendingByCategory(allTransactions, allCategories);
+  // Use fetched data from database, fallback to mock data if empty
+  const allTransactions = transactions && transactions.length > 0 ? transactions : mockTransactions;
+  const allCategories = categories && categories.length > 0 ? categories : mockCategories;
+  const spendingData = getSpendingByCategory(allTransactions, allCategories)
+    .filter(category => category.spent > 0) // Only show categories with spending
+    .sort((a, b) => b.spent - a.spent); // Sort by spending amount (highest first)
+  
+  // Debug logging
+  console.log('🔍 Dashboard Debug:');
+  console.log('📊 All transactions:', allTransactions.length);
+  console.log('📂 All categories:', allCategories.length);
+  console.log('💰 Spending data:', spendingData.map(c => ({ name: c.name, spent: c.spent })));
+  
+  // Check if using real data or mock data
+  const isUsingRealData = transactions && transactions.length > 0 && categories && categories.length > 0;
+  const dataSource = isUsingRealData ? 'Database' : 'Demo Data';
   const totalSpent = spendingData.reduce((sum, category) => sum + category.spent, 0);
-  const totalBudget = 2000;
   const remainingBudget = totalBudget - totalSpent;
 
   // Show loading state
@@ -194,11 +207,16 @@ export default function DashboardScreen() {
           <ThemedText style={styles.subtitle}>
             Track your spending and get AI insights
           </ThemedText>
+          <View style={styles.dataSourceIndicator}>
+            <ThemedText style={styles.dataSourceText}>
+              📊 {dataSource} • {allTransactions.length} transactions
+            </ThemedText>
+          </View>
         </ThemedView>
 
         <ThemedView style={styles.budgetCard}>
           <View style={styles.budgetHeader}>
-            <ThemedText type="subtitle">Monthly Budget</ThemedText>
+            <ThemedText type="subtitle">{budgetPeriod === 'weekly' ? 'Weekly' : 'Monthly'} Budget</ThemedText>
             <ThemedText style={styles.budgetAmount}>${totalBudget.toLocaleString()}</ThemedText>
           </View>
           <View style={styles.budgetProgress}>
@@ -399,6 +417,19 @@ const styles = StyleSheet.create({
   subtitle: {
     marginTop: 8,
     opacity: 0.7,
+  },
+  dataSourceIndicator: {
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  dataSourceText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
   },
   budgetCard: {
     backgroundColor: 'white',

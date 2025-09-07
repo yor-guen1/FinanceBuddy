@@ -496,9 +496,12 @@ export const mockInsights = [
 ];
 
 export const getSpendingByCategory = (transactions: Transaction[], categories: Category[]) => {
+  // Only process expense transactions, exclude income
+  const expenseTransactions = transactions.filter(t => t.type === 'expense');
+  
   const spending = categories.map(category => {
-    const categoryTransactions = transactions.filter(
-      t => t.category === category.id && t.type === 'expense'
+    const categoryTransactions = expenseTransactions.filter(
+      t => t.category === category.id
     );
     const total = categoryTransactions.reduce((sum, t) => sum + t.amount, 0);
     return {

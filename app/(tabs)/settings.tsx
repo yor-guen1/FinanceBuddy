@@ -2,12 +2,16 @@ import BudgetGoalsModal from '@/components/BudgetGoalsModal';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { AppDispatch, RootState } from '@/store';
+import { setBudgetPeriod } from '@/store/slices/budgetSettingsSlice';
 import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDispatch, useSelector } from 'react-redux';
 
 export default function SettingsScreen() {
-  const [budgetPeriod, setBudgetPeriod] = useState<'weekly' | 'monthly'>('monthly');
+  const dispatch = useDispatch<AppDispatch>();
+  const budgetPeriod = useSelector((state: RootState) => state.budgetSettings.period);
   const [notifications, setNotifications] = useState({
     budgetAlerts: true,
     weeklyReports: true,
@@ -25,8 +29,8 @@ export default function SettingsScreen() {
       'Choose your budget tracking period',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Weekly', onPress: () => setBudgetPeriod('weekly') },
-        { text: 'Monthly', onPress: () => setBudgetPeriod('monthly') },
+        { text: 'Weekly', onPress: () => dispatch(setBudgetPeriod('weekly')) },
+        { text: 'Monthly', onPress: () => dispatch(setBudgetPeriod('monthly')) },
       ]
     );
   };

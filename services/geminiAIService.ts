@@ -342,6 +342,23 @@ Return the JSON response now:
 
     return response.json();
   }
+
+  // General text generation for chatbot
+  async generateText(prompt: string): Promise<string> {
+    try {
+      if (!this.genAI) {
+        throw new Error('Gemini AI not initialized');
+      }
+
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.error('Error generating text with Gemini:', error);
+      throw error;
+    }
+  }
 }
 
 export const geminiAIService = new GeminiAIService();

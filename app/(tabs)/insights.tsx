@@ -1,7 +1,7 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { getSpendingByCategory, mockInsights } from '@/services/mockData';
+import { getSpendingByCategory, mockCategories, mockInsights, mockTransactions } from '@/services/mockData';
 import { AppDispatch, RootState } from '@/store';
 import { fetchCategories } from '@/store/slices/categoriesSlice';
 import { fetchTransactions } from '@/store/slices/transactionsSlice';
@@ -12,16 +12,109 @@ import { useDispatch, useSelector } from 'react-redux';
 
 const { width } = Dimensions.get('window');
 
+// Generate insights from real data
+function generateInsightsFromData(spendingData: any[], transactions: any[]) {
+  const totalSpent = spendingData.reduce((sum, category) => sum + category.spent, 0);
+  const topCategory = spendingData.reduce((max, category) => 
+    category.spent > max.spent ? category : max, spendingData[0] || { spent: 0, name: 'None' }
+  );
+  
+  // Calculate income from transactions
+  const incomeTransactions = transactions.filter(t => t.type === 'income');
+  const totalIncome = incomeTransactions.reduce((sum, t) => sum + t.amount, 0);
+  
+  const insights = [];
+  
+  // Spending analysis
+  if (totalSpent > 1000) {
+    insights.push({
+      id: '1',
+      type: 'warning',
+      title: 'High Spending Alert',
+      message: `You've spent $${totalSpent.toFixed(2)} this month. Consider reviewing your budget.`,
+      category: 'Budget',
+      priority: 'high'
+    });
+  }
+  
+  // Savings analysis
+  if (totalIncome > 0) {
+    const savings = totalIncome - totalSpent;
+    const savingsRate = (savings / totalIncome) * 100;
+    
+    if (savingsRate < 10) {
+      insights.push({
+        id: '4',
+        type: 'warning',
+        title: 'Low Savings Rate',
+        message: `Your savings rate is ${savingsRate.toFixed(1)}%. Financial experts recommend saving at least 20% of income.`,
+        category: 'Savings',
+        priority: 'high'
+      });
+    } else if (savingsRate > 30) {
+      insights.push({
+        id: '5',
+        type: 'achievement',
+        title: 'Excellent Savings Rate',
+        message: `Great job! You're saving ${savingsRate.toFixed(1)}% of your income ($${savings.toFixed(2)}).`,
+        category: 'Savings',
+        priority: 'low'
+      });
+    }
+  }
+  
+  // Top category insight
+  if (topCategory.spent > 0) {
+    insights.push({
+      id: '2',
+      type: 'tip',
+      title: 'Top Spending Category',
+      message: `Your highest spending is on ${topCategory.name} at $${topCategory.spent.toFixed(2)}.`,
+      category: 'Spending',
+      priority: 'medium'
+    });
+  }
+  
+  // Transaction count insight
+  const transactionCount = transactions.length;
+  if (transactionCount > 10) {
+    insights.push({
+      id: '3',
+      type: 'achievement',
+      title: 'Active Tracking',
+      message: `Great job! You've tracked ${transactionCount} transactions this month.`,
+      category: 'Tracking',
+      priority: 'low'
+    });
+  }
+  
+  // Default insight if no data
+  if (insights.length === 0) {
+    insights.push({
+      id: '1',
+      type: 'tip',
+      title: 'Start Tracking',
+      message: 'Add some transactions to get personalized insights!',
+      category: 'Getting Started',
+      priority: 'medium'
+    });
+  }
+  
+  return insights;
+}
+
 export default function InsightsScreen() {
   const dispatch = useDispatch<AppDispatch>();
   
-  // Redux state
+  // Redux state - ALL HOOKS MUST BE AT THE TOP
   const transactions = useSelector((state: RootState) => state.transactions.transactions);
   const categories = useSelector((state: RootState) => state.categories.categories);
   const transactionsLoading = useSelector((state: RootState) => state.transactions.loading);
   const categoriesLoading = useSelector((state: RootState) => state.categories.loading);
   const transactionsError = useSelector((state: RootState) => state.transactions.error);
   const categoriesError = useSelector((state: RootState) => state.categories.error);
+  const budgetPeriod = useSelector((state: RootState) => state.budgetSettings.period);
+  const totalBudget = useSelector((state: RootState) => state.budgetSettings.totalBudget);
   
   // Test user ID (hardcoded for now)
   const userId = '550e8400-e29b-41d4-a716-446655440000';
@@ -30,7 +123,7 @@ export default function InsightsScreen() {
   useEffect(() => {
     dispatch(fetchTransactions(userId));
     dispatch(fetchCategories(userId));
-  }, [dispatch, userId]);
+  }, [dispatch]);
   
   // Show loading state
   if (transactionsLoading || categoriesLoading) {
@@ -57,9 +150,25 @@ export default function InsightsScreen() {
     );
   }
   
-  // Calculate spending data from transactions
-  const spendingData = getSpendingByCategory(transactions || [], categories || []);
-  const insights = mockInsights; // For now, keep using mock insights
+  // Calculate spending data from transactions, fallback to mock data if empty
+  const allTransactions = transactions && transactions.length > 0 ? transactions : mockTransactions;
+  const allCategories = categories && categories.length > 0 ? categories : mockCategories;
+  const spendingData = getSpendingByCategory(allTransactions, allCategories)
+    .filter(category => category.spent > 0) // Only show categories with spending
+    .sort((a, b) => b.spent - a.spent); // Sort by spending amount (highest first)
+  
+  // Debug logging
+  console.log('🔍 Insights Debug:');
+  console.log('📊 All transactions:', allTransactions.length);
+  console.log('📂 All categories:', allCategories.length);
+  console.log('💰 Filtered spending data:', spendingData.map(c => ({ name: c.name, spent: c.spent })));
+  
+  // Calculate budget values (same as dashboard)
+  const totalSpent = spendingData.reduce((sum, category) => sum + category.spent, 0);
+  const remainingBudget = totalBudget - totalSpent;
+  
+  // Use real insights if we have data, otherwise fallback to mock insights
+  const insights = allTransactions.length > 0 ? generateInsightsFromData(spendingData, allTransactions) : mockInsights;
 
   const getInsightIcon = (type: string) => {
     switch (type) {
@@ -90,15 +199,17 @@ export default function InsightsScreen() {
         </ThemedView>
 
         <ThemedView style={styles.summaryCard}>
-          <ThemedText type="subtitle" style={styles.cardTitle}>This Week's Spending</ThemedText>
+          <ThemedText type="subtitle" style={styles.cardTitle}>This {budgetPeriod === 'weekly' ? 'Week' : 'Month'}'s Spending</ThemedText>
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
               <ThemedText style={styles.summaryLabel}>Total Spent</ThemedText>
-              <ThemedText type="title" style={styles.summaryValue}>$571.99</ThemedText>
+              <ThemedText type="title" style={styles.summaryValue}>${totalSpent.toFixed(2)}</ThemedText>
             </View>
             <View style={styles.summaryItem}>
               <ThemedText style={styles.summaryLabel}>Budget Remaining</ThemedText>
-              <ThemedText type="title" style={[styles.summaryValue, styles.positiveValue]}>$1,428.01</ThemedText>
+              <ThemedText type="title" style={[styles.summaryValue, remainingBudget >= 0 ? styles.positiveValue : styles.negativeValue]}>
+                ${Math.abs(remainingBudget).toFixed(2)}
+              </ThemedText>
             </View>
           </View>
         </ThemedView>
@@ -111,7 +222,7 @@ export default function InsightsScreen() {
                 <View style={styles.chartRow}>
                   <View style={styles.categoryInfo}>
                     <View style={[styles.categoryDot, { backgroundColor: item.color }]} />
-                    <ThemedText style={styles.categoryName}>{item.category}</ThemedText>
+                    <ThemedText style={styles.categoryName}>{item.name}</ThemedText>
                   </View>
                   <ThemedText style={styles.categoryAmount}>${(item.spent || 0).toFixed(2)}</ThemedText>
                 </View>
@@ -237,6 +348,9 @@ const styles = StyleSheet.create({
   },
   positiveValue: {
     color: '#96CEB4',
+  },
+  negativeValue: {
+    color: '#FF6B6B',
   },
   chartCard: {
     backgroundColor: 'white',
