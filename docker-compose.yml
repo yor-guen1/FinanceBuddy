@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # SQLite Database Backup Service
+  sqlite-backup:
+    image: alpine:latest
+    container_name: financebuddy-sqlite-backup
+    restart: "no"
+    volumes:
+      - ./backend:/app
+      - sqlite_backup:/backup
+    command: >
+      sh -c "
+        apk add --no-cache sqlite &&
+        cp /app/moneymate.db /backup/moneymate-$(date +%Y%m%d-%H%M%S).db 2>/dev/null || echo 'No existing SQLite database found'
+      "
+    networks:
+      - financebuddy-network
+
+  # SQLite Database Admin Tool (SQLite Browser)
+  sqlite-admin:
+    image: coleifer/sqlite-web:latest
+    container_name: financebuddy-sqlite-admin
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/data
+    command: sqlite_web -H 0.0.0.0 -x /data/moneymate.db
+    networks:
+      - financebuddy-network
+
+volumes:
+  sqlite_backup:
+    driver: local
+
+networks:
+  financebuddy-network:
+    driver: bridge
