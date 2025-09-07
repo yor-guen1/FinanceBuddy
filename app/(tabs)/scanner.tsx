@@ -4,6 +4,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { OCRService } from '@/services/ocrService';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,6 +14,7 @@ export default function ScannerScreen() {
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const router = useRouter();
 
   const handleScanReceipt = async () => {
     if (!cameraPermission?.granted) {
@@ -215,7 +217,7 @@ export default function ScannerScreen() {
             <IconSymbol name="chevron.right" size={16} color="#666" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/add-transaction')}>
             <View style={styles.actionIcon}>
               <IconSymbol name="plus.circle.fill" size={24} color="#96CEB4" />
             </View>

@@ -6,16 +6,16 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { getSpendingByCategory, mockTransactions } from '@/services/mockData';
 import React, { useRef, useState } from 'react';
 import {
-    Dimensions,
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Dimensions,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -246,7 +246,8 @@ Would you like me to create a specific debt payoff timeline?`;
 
 📊 Top Merchants:
 • ${mockTransactions.reduce((acc, t) => {
-    acc[t.merchant] = (acc[t.merchant] || 0) + 1;
+    const key = t.merchant ?? 'Unknown';
+    acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {} as Record<string, number>)} transactions
 
@@ -291,7 +292,7 @@ What specific financial topic would you like to explore?`;
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ThemedView style={styles.header}>
-        <ThemedText type="title">MoneyMate Assistant</ThemedText>
+        <ThemedText type="title" style={styles.headerTitle}>MoneyMate Assistant</ThemedText>
         <ThemedText style={styles.subtitle}>
           Your AI financial advisor
         </ThemedText>
@@ -393,9 +394,15 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingBottom: 12,
+    paddingTop: 20,
+    paddingBottom: 8,
   },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  
   subtitle: {
     marginTop: 4,
     opacity: 0.7,
@@ -409,7 +416,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   messagesContent: {
-    paddingBottom: 100,
+    paddingBottom: 80,
     paddingTop: 8,
   },
   messageContainer: {
@@ -481,18 +488,19 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 25,
-    marginBottom: Platform.OS === 'ios' ? 90 : 80,
-    marginHorizontal: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    marginBottom: 12,
+    marginHorizontal: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    borderColor: 'rgba(0,0,0,0.06)',
+    backgroundColor: 'white',
   },
   textInput: {
     flex: 1,
@@ -504,16 +512,16 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 8,
+    marginLeft: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 2,
-    elevation: 2,
+    elevation: 1,
   },
 });

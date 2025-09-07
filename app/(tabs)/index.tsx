@@ -2,12 +2,14 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { getSpendingByCategory, getWeeklySpending, mockCategories, mockInsights, mockTransactions } from '@/services/mockData';
+import { useRouter } from 'expo-router';
 import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
 export default function DashboardScreen() {
+  const router = useRouter();
   // Calculate current month spending
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -62,6 +64,14 @@ export default function DashboardScreen() {
       icon: 'building.2.fill',
       color: '#45B7D1',
       onPress: () => console.log('Connect bank'),
+    },
+    {
+      id: '4',
+      title: 'Add Expense',
+      subtitle: 'Enter manually',
+      icon: 'plus.circle.fill',
+      color: '#96CEB4',
+      onPress: () => router.push('/add-transaction'),
     },
     {
       id: '3',
