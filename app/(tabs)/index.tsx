@@ -115,13 +115,33 @@ export default function DashboardScreen() {
           <ThemedText type="subtitle" style={styles.cardTitle}>Spending Trends</ThemedText>
           <View style={styles.trendRows}>
             <View style={styles.trendRowLine}>
-              <ThemedText style={styles.trendRowLabel}>Weekly Average</ThemedText>
-              <ThemedText type="title">${weeklyAverage.toFixed(2)}</ThemedText>
+              <ThemedText style={styles.trendRowLabel}>Expected Trend</ThemedText>
+              <View style={styles.trendRight}>
+                <ThemedText type="title" style={styles.trendPercent}>{idealUtilizationPercent.toFixed(0)}%</ThemedText>
+              </View>
             </View>
             <View style={styles.separator} />
             <View style={styles.trendRowLine}>
-              <ThemedText style={styles.trendRowLabel}>Monthly Projection</ThemedText>
-              <ThemedText type="title">${monthlyProjection.toFixed(2)}</ThemedText>
+              <ThemedText style={styles.trendRowLabel}>Current Trend</ThemedText>
+              <View style={styles.trendRight}>
+                <ThemedText type="title" style={styles.trendPercent}>{actualUtilizationPercent.toFixed(0)}%</ThemedText>
+                <View style={[
+                  styles.deltaPill,
+                  { backgroundColor: (actualUtilizationPercent <= idealUtilizationPercent ? '#2ecc71' : '#e74c3c') + '20' }
+                ]}>
+                  <IconSymbol 
+                    name={actualUtilizationPercent <= idealUtilizationPercent ? 'arrow.down.right' : 'arrow.up.right'} 
+                    size={12} 
+                    color={actualUtilizationPercent <= idealUtilizationPercent ? '#2ecc71' : '#e74c3c'} 
+                  />
+                  <Text style={[
+                    styles.deltaText,
+                    { color: actualUtilizationPercent <= idealUtilizationPercent ? '#2ecc71' : '#e74c3c' }
+                  ]}>
+                    {`${Math.abs(Number((actualUtilizationPercent - idealUtilizationPercent).toFixed(0)))}%`}
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
         </ThemedView>
@@ -478,6 +498,27 @@ const styles = StyleSheet.create({
   },
   trendRowLabel: {
     opacity: 0.7,
+  },
+  trendRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  trendPercent: {
+    minWidth: 56,
+    textAlign: 'right',
+  },
+  deltaPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  deltaText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   separator: {
     height: 1,
