@@ -1,7 +1,7 @@
 {
     "name": "moneymate-backend",
     "version": "1.0.0",
-    "description": "MoneyMate Backend API",
+    "description": "BudgetBuddy Backend API",
     "main": "server-sqlite.js",
     "scripts": {
         "start": "node server-sqlite.js",
@@ -24,6 +24,6 @@
         "tracking",
         "api"
     ],
-    "author": "MoneyMate Team",
+    "author": "BudgetBuddy Team",
     "license": "MIT"
 }

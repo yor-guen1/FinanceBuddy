@@ -74,10 +74,7 @@ export default function ScannerScreen() {
   const processReceiptImage = async (imageUri: string) => {
     setIsProcessing(true);
     try {
-      console.log('Processing receipt image...');
       const extractedText = await OCRService.processReceipt(imageUri);
-      
-      console.log('OCR Result:', extractedText);
       
       if (extractedText && extractedText.trim().length > 0) {
         Alert.alert(
@@ -130,8 +127,8 @@ export default function ScannerScreen() {
       'This feature will allow you to automatically import transactions from your bank account using secure banking APIs like Plaid or Yodlee.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Learn More', onPress: () => console.log('Learn more about bank connection') },
-        { text: 'Connect', onPress: () => console.log('Connect bank account') },
+        { text: 'Learn More', onPress: () => {} },
+        { text: 'Connect', onPress: () => {} },
       ]
     );
   };

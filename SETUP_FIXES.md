@@ -1,6 +1,6 @@
-# MoneyMate Setup Fixes
+# BudgetBuddy Setup Fixes
 
-This document outlines the critical fixes applied to the MoneyMate receipt reading feature and AI integration.
+This document outlines the critical fixes applied to the BudgetBuddy receipt reading feature and AI integration.
 
 ## 🚀 **Quick Setup Guide**
 

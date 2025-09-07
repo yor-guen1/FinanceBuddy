@@ -1,4 +1,4 @@
-// API Service for MoneyMate Frontend
+// API Service for BudgetBuddy Frontend
 // Handles all communication with the backend API
 
 import Constants from 'expo-constants';
@@ -60,7 +60,6 @@ export interface Receipt {
 class ApiService {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
-    console.log('🔍 API Request:', url);
     
     try {
       const response = await fetch(url, {
@@ -71,7 +70,6 @@ class ApiService {
         ...options,
       });
 
-      console.log('📡 API Response Status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -90,26 +88,27 @@ class ApiService {
       }
 
       const data = await response.json();
-      console.log('✅ API Response Data:', data);
       return data;
     } catch (error) {
       console.error('❌ API Request Error:', error);
       
       // Handle different types of errors
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        throw new Error('Network request failed. Please check if the backend server is running.');
-      } else if (error.name === 'AbortError') {
-        throw new Error('Request timeout. Please try again.');
+      if (error instanceof Error) {
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          throw new Error('Network request failed. Please check if the backend server is running.');
+        } else if (error.name === 'AbortError') {
+          throw new Error('Request timeout. Please try again.');
+        } else {
+          throw error;
+        }
       } else {
-        throw error;
+        throw new Error('Unknown error occurred');
       }
     }
   }
 
   // User endpoints
   async getUserData(userId: string) {
-    console.log('🔍 API Service: Fetching user data for:', userId);
-    console.log('🔍 API Service: Base URL:', API_BASE_URL);
     
     try {
       const result = await this.request<{
@@ -117,7 +116,6 @@ class ApiService {
         categories: Category[];
         transactions: Transaction[];
       }>(`/api/users/${userId}`);
-      console.log('✅ API Service: User data fetched successfully');
       return result;
     } catch (error) {
       console.error('❌ API Service: Error fetching user data:', error);

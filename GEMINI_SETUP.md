@@ -1,4 +1,4 @@
-# Gemini AI Setup for MoneyMate
+# Gemini AI Setup for BudgetBuddy
 
 ## 🚀 **Get Your Gemini API Key**
 

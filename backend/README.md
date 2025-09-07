@@ -1,6 +1,6 @@
-# MoneyMate Backend
+# BudgetBuddy Backend
 
-This is the backend API for the MoneyMate financial tracking application.
+This is the backend API for the BudgetBuddy financial tracking application.
 
 ## 🚀 Quick Setup
 

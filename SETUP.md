@@ -1,4 +1,4 @@
-# MoneyMate Database Setup
+# BudgetBuddy Database Setup
 
 ## Prerequisites
 
@@ -33,7 +33,7 @@ GRANT ALL PRIVILEGES ON DATABASE moneymate TO moneymate_user;
 ### 3. Run Database Schema
 ```bash
 # Navigate to project directory
-cd "F:\AI-powered financial assistant app\FinanceBuddy"
+cd "F:\AI-powered financial assistant app\BudgetBuddy"
 
 # Run the schema file
 psql -U moneymate_user -d moneymate -f database/schema.sql

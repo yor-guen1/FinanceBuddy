@@ -36,7 +36,7 @@ export default function ChatbotScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
-      text: 'Hello! I\'m your MoneyMate AI assistant. I can help you with budgeting, expense tracking, and financial advice. How can I assist you today?',
+      text: 'Hi! I\'m BudgetBuddy 💰 I can help with spending analysis, budgeting, and savings tips. What do you need?',
       isUser: false,
       timestamp: new Date()
     }
@@ -163,7 +163,6 @@ export default function ChatbotScreen() {
 
   const handleActionPress = (action: string) => {
     // Handle quick actions
-    console.log('Action pressed:', action);
     // TODO: Implement navigation to specific screens
   };
 
@@ -175,7 +174,7 @@ export default function ChatbotScreen() {
             <IconSymbol name="brain.head.profile" size={28} color="#4ECDC4" />
           </View>
           <View style={styles.headerText}>
-            <ThemedText type="title" style={styles.headerTitle}>MoneyMate AI</ThemedText>
+            <ThemedText type="title" style={styles.headerTitle}>BudgetBuddy AI</ThemedText>
             <ThemedText style={styles.subtitle}>
               Your intelligent financial assistant
             </ThemedText>
@@ -281,7 +280,7 @@ export default function ChatbotScreen() {
               style={[styles.textInput, { color: colors.text, borderColor: colors.text + '30' }]}
               value={inputText}
               onChangeText={setInputText}
-              placeholder="Ask me anything about your finances..."
+              placeholder="Ask about your spending, budget, or savings..."
               placeholderTextColor={colors.text + '60'}
               multiline
               maxLength={500}

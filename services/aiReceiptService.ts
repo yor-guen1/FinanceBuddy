@@ -35,7 +35,6 @@ export class AIReceiptService {
   // Enhanced receipt processing with Gemini AI analysis
   static async processReceiptWithAI(imageUri: string, userId?: string): Promise<AIReceiptAnalysis> {
     try {
-      console.log('🚀 Starting AI receipt processing...');
       
       // First, extract text using existing OCR service
       const rawText = await this.extractTextFromImage(imageUri);
@@ -46,15 +45,11 @@ export class AIReceiptService {
       
       if (userId) {
         // Use Gemini AI to analyze and save to database
-        console.log('💾 Processing with database save...');
         const result = await geminiAIService.processAndSaveReceipt(imageUri, rawText, userId);
-        console.log('✅ Receipt processed and saved successfully');
         return this.convertGeminiToAI(result.analysis);
       } else {
         // Just analyze with Gemini AI (no database save)
-        console.log('🔍 Processing without database save...');
         const geminiAnalysis = await geminiAIService.analyzeReceiptText(rawText);
-        console.log('✅ Receipt analysis completed');
         return this.convertGeminiToAI(geminiAnalysis);
       }
     } catch (error) {
@@ -69,18 +64,15 @@ export class AIReceiptService {
         console.error('🔑 API key configuration issue');
       }
       
-      console.log('🔄 Falling back to mock data...');
       return this.getMockAIAnalysis();
     }
   }
 
   // Extract text from image (using existing OCR service)
   private static async extractTextFromImage(imageUri: string): Promise<string> {
-    console.log('📸 Starting OCR extraction for image:', imageUri);
     // Use the real OCR service to extract text from image
     const { OCRService } = await import('./ocrService');
     const extractedText = await OCRService.processReceipt(imageUri);
-    console.log('✅ OCR extraction completed, text length:', extractedText.length);
     return extractedText;
   }
 
@@ -466,7 +458,6 @@ Total:               $96.66`
         throw new Error('Failed to save receipt');
       }
       
-      console.log('Receipt and AI analysis saved to database');
     } catch (error) {
       console.error('Error saving to database:', error);
       // Don't throw error - let the AI analysis continue

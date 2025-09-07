@@ -44,16 +44,12 @@ function convertApiTransaction(apiTransaction: ApiTransaction): Transaction {
 export const fetchTransactions = createAsyncThunk(
   'transactions/fetchTransactions',
   async (userId: string) => {
-    console.log('🔄 Transactions: Starting fetch for user:', userId);
     try {
       const userData = await apiService.getUserData(userId);
-      console.log('✅ Transactions: User data received:', userData);
       const transactions = userData.transactions.map(convertApiTransaction);
-      console.log('✅ Transactions: Converted transactions:', transactions);
       return transactions;
     } catch (error) {
       console.error('❌ Transactions: Error fetching transactions:', error);
-      console.log('🔄 Transactions: Falling back to mock data...');
       // Import mock data as fallback
       const { mockTransactions } = await import('@/services/mockData');
       return mockTransactions;

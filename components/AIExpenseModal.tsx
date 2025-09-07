@@ -1,6 +1,6 @@
 import { AIReceiptAnalysis, AIReceiptService } from '@/services/aiReceiptService';
 import { CategoryService } from '@/services/categoryService';
-import { addTransaction } from '@/store/slices/transactionsSlice';
+import { createTransactionAsync } from '@/store/slices/transactionsSlice';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -92,15 +92,15 @@ export default function AIExpenseModal({ visible, onClose, receiptImageUri }: AI
       id: Date.now().toString(),
       amount: numericAmount,
       description,
-      category: selectedCategory || 'Other',
-      date: new Date().toISOString(),
+      category: selectedCategory || '8', // Default to "Other" category ID
+      date: new Date().toISOString().split('T')[0], // Format as YYYY-MM-DD
       type: 'expense' as const,
       source: 'receipt' as const,
       merchant: merchant || undefined,
       location: location || undefined,
     };
 
-    dispatch(addTransaction(newTransaction));
+    dispatch(createTransactionAsync(newTransaction));
 
     // Reset form
     setAmount('');
@@ -265,14 +265,14 @@ export default function AIExpenseModal({ visible, onClose, receiptImageUri }: AI
                       key={category.id}
                       style={[
                         styles.categoryButton,
-                        selectedCategory === category.name && styles.selectedCategoryButton
+                        selectedCategory === category.id && styles.selectedCategoryButton
                       ]}
-                      onPress={() => setSelectedCategory(category.name)}
+                      onPress={() => setSelectedCategory(category.id)}
                     >
                       <Text style={styles.categoryIcon}>{category.icon}</Text>
                       <ThemedText style={[
                         styles.categoryText,
-                        selectedCategory === category.name && styles.selectedCategoryText
+                        selectedCategory === category.id && styles.selectedCategoryText
                       ]}>
                         {category.name}
                       </ThemedText>

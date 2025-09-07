@@ -68,22 +68,22 @@ export class GeminiAIService {
       // Parse Gemini's JSON response
       const analysis = this.parseGeminiResponse(text);
       
-      console.log('✅ Gemini AI analysis completed successfully');
       return analysis;
     } catch (error) {
       console.error('❌ Gemini AI analysis failed:', error);
       
       // Provide more specific error handling
-      if (error.message?.includes('403')) {
-        console.error('🔑 API key authentication failed. Please check your Gemini API key.');
-      } else if (error.message?.includes('429')) {
-        console.error('⏰ Rate limit exceeded. Please try again later.');
-      } else if (error.message?.includes('network')) {
-        console.error('🌐 Network error. Please check your internet connection.');
+      if (error instanceof Error) {
+        if (error.message?.includes('403')) {
+          console.error('🔑 API key authentication failed. Please check your Gemini API key.');
+        } else if (error.message?.includes('429')) {
+          console.error('⏰ Rate limit exceeded. Please try again later.');
+        } else if (error.message?.includes('network')) {
+          console.error('🌐 Network error. Please check your internet connection.');
+        }
       }
       
       // Fallback to mock analysis
-      console.log('🔄 Falling back to mock analysis...');
       return this.getMockAnalysis();
     }
   }

@@ -157,11 +157,6 @@ export default function InsightsScreen() {
     .filter(category => category.spent > 0) // Only show categories with spending
     .sort((a, b) => b.spent - a.spent); // Sort by spending amount (highest first)
   
-  // Debug logging
-  console.log('🔍 Insights Debug:');
-  console.log('📊 All transactions:', allTransactions.length);
-  console.log('📂 All categories:', allCategories.length);
-  console.log('💰 Filtered spending data:', spendingData.map(c => ({ name: c.name, spent: c.spent })));
   
   // Calculate budget values (same as dashboard)
   const totalSpent = spendingData.reduce((sum, category) => sum + category.spent, 0);

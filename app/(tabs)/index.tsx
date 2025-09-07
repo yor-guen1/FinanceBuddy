@@ -49,11 +49,6 @@ export default function DashboardScreen() {
     .filter(category => category.spent > 0) // Only show categories with spending
     .sort((a, b) => b.spent - a.spent); // Sort by spending amount (highest first)
   
-  // Debug logging
-  console.log('🔍 Dashboard Debug:');
-  console.log('📊 All transactions:', allTransactions.length);
-  console.log('📂 All categories:', allCategories.length);
-  console.log('💰 Spending data:', spendingData.map(c => ({ name: c.name, spent: c.spent })));
   
   // Check if using real data or mock data
   const isUsingRealData = transactions && transactions.length > 0 && categories && categories.length > 0;
@@ -112,8 +107,8 @@ export default function DashboardScreen() {
       'This feature will allow you to automatically import transactions from your bank account using secure banking APIs like Plaid or Yodlee.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Learn More', onPress: () => console.log('Learn more about bank connection') },
-        { text: 'Connect', onPress: () => console.log('Connect bank account') },
+        { text: 'Learn More', onPress: () => {} },
+        { text: 'Connect', onPress: () => {} },
       ]
     );
   };
@@ -186,7 +181,7 @@ export default function DashboardScreen() {
       'You will be reminded to check your weekly financial report in 2 days.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Set Reminder', onPress: () => console.log('Reminder set') },
+        { text: 'Set Reminder', onPress: () => {} },
       ]
     );
   };

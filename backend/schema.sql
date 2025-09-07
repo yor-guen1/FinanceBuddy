@@ -1,5 +1,5 @@
--- MoneyMate Database Schema
--- This file contains the complete database schema for the MoneyMate application
+-- BudgetBuddy Database Schema
+-- This file contains the complete database schema for the BudgetBuddy application
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

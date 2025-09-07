@@ -42,16 +42,12 @@ function convertApiCategory(apiCategory: ApiCategory, transactions: any[] = []):
 export const fetchCategories = createAsyncThunk(
   'categories/fetchCategories',
   async (userId: string) => {
-    console.log('🔄 Categories: Starting fetch for user:', userId);
     try {
       const userData = await apiService.getUserData(userId);
-      console.log('✅ Categories: User data received:', userData);
       const categories = userData.categories.map(cat => convertApiCategory(cat, userData.transactions));
-      console.log('✅ Categories: Converted categories:', categories);
       return categories;
     } catch (error) {
       console.error('❌ Categories: Error fetching categories:', error);
-      console.log('🔄 Categories: Falling back to mock data...');
       // Import mock data as fallback
       const { mockCategories } = await import('@/services/mockData');
       return mockCategories;

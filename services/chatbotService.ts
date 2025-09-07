@@ -82,7 +82,7 @@ export class ChatbotService {
     const context = this.financialContext!;
     const recentMessages = this.conversationHistory.slice(-5); // Last 5 messages for context
     
-    return `You are MoneyMate, a helpful financial assistant. Here's the user's current financial situation:
+    return `You are BudgetBuddy, a helpful financial assistant. Here's the user's current financial situation:
 
 FINANCIAL CONTEXT:
 - Total Spent: $${context.totalSpent.toFixed(2)} (${context.period})
@@ -156,7 +156,7 @@ Keep your response concise but informative (2-3 paragraphs max).`;
     if (input.includes('hello') || input.includes('hi') || input.includes('hey')) {
       return {
         id: Date.now().toString(),
-        text: "Hello! I'm MoneyMate, your personal financial assistant. I can help you with budgeting, expense tracking, and financial planning. What would you like to know?",
+        text: "Hi! I'm BudgetBuddy 💰 I can help with spending analysis, budgeting, and savings tips. What do you need?",
         isUser: false,
         timestamp: new Date(),
         type: 'suggestion',
@@ -167,7 +167,7 @@ Keep your response concise but informative (2-3 paragraphs max).`;
     if (input.includes('help') || input.includes('what can you do')) {
       return {
         id: Date.now().toString(),
-        text: "I can help you with:\n\n• 📊 Analyze your spending patterns\n• 💰 Create and track budgets\n• 🎯 Set financial goals\n• 💡 Provide money-saving tips\n• 📈 Plan for major purchases\n• 🔍 Categorize transactions\n\nWhat would you like help with?",
+        text: "I help with spending analysis, budgeting, and savings tips 📊 Ask me about your finances!",
         isUser: false,
         timestamp: new Date(),
         type: 'suggestion',
@@ -177,7 +177,7 @@ Keep your response concise but informative (2-3 paragraphs max).`;
 
     return {
       id: Date.now().toString(),
-      text: "I'm here to help with your financial questions! You can ask me about your spending, budgeting, savings goals, or any other financial topics. What would you like to know?",
+      text: "Ask me about your spending, budgeting, or savings goals 💡 What do you need help with?",
       isUser: false,
       timestamp: new Date(),
       type: 'suggestion',

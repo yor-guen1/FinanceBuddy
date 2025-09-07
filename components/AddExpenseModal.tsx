@@ -1,4 +1,4 @@
-import { addTransaction } from '@/store/slices/transactionsSlice';
+import { createTransactionAsync } from '@/store/slices/transactionsSlice';
 import React, { useState } from 'react';
 import {
     Alert,
@@ -44,15 +44,15 @@ export default function AddExpenseModal({ visible, onClose }: AddExpenseModalPro
       id: Date.now().toString(),
       amount: numericAmount,
       description,
-      category: 'other', // Default category
-      date: new Date().toISOString(),
+      category: '8', // Default to "Other" category ID
+      date: new Date().toISOString().split('T')[0], // Format as YYYY-MM-DD
       type: 'expense' as const,
       source: 'manual' as const,
       merchant: merchant || undefined,
       location: location || undefined,
     };
 
-    dispatch(addTransaction(newTransaction));
+    dispatch(createTransactionAsync(newTransaction));
     
     // Reset form
     setAmount('');
