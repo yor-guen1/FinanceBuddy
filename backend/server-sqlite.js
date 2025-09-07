@@ -236,6 +236,6 @@ app.get('/api/health', (req, res) => {
 app.listen(port, '0.0.0.0', () => {
     console.log(`MoneyMate API server running on port ${port}`);
     console.log(`Local access: http://localhost:${port}`);
-    console.log(`Network access: http://10.1.52.240:${port}`);
+    console.log(`Network access: http://YOUR_IP:${port} (replace YOUR_IP with your actual IP)`);
     console.log(`Health check: http://localhost:${port}/api/health`);
 });
