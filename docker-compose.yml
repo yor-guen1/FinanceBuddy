@@ -23,7 +23,7 @@ services:
     container_name: financebuddy-sqlite-admin
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8086:8080"
     volumes:
       - ./backend:/data
     command: sqlite_web -H 0.0.0.0 -x /data/moneymate.db

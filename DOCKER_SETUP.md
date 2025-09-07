@@ -11,9 +11,9 @@ This Docker Compose setup provides SQLite database management tools for your Fin
 
 ### 2. SQLite Web Admin Tool
 - **Container**: `financebuddy-sqlite-admin`
-- **Port**: 8080
+- **Port**: 8086
 - **Purpose**: Web-based SQLite database browser and management
-- **Access**: http://localhost:8080
+- **Access**: http://localhost:8086
 
 ## Quick Start
 
@@ -45,7 +45,7 @@ This Docker Compose setup provides SQLite database management tools for your Fin
 - **Location**: Local file system
 
 ### SQLite Web Admin Interface
-- **URL**: http://localhost:8080
+- **URL**: http://localhost:8086
 - **Purpose**: Browse and manage your SQLite database
 - **Features**: 
   - View tables and data
@@ -119,7 +119,7 @@ docker-compose up -d
    ```
 
 2. **Access SQLite web admin**:
-   - Open http://localhost:8080
+   - Open http://localhost:8086
    - Browse your database tables and data
 
 3. **Run your application normally**:
